@@ -17,7 +17,7 @@
             --color-shadow:#babecc;
             --text-color:#616e7f;
             --bar-bg:#aec9f8;
-            --text-size:30px;
+            --text-size:24px;
         }
         body{height:100vh; background:var(--body-bg); display:flex; align-items:center; justify-content:center;}
         .player_body{width:360px; padding:25px 30px; border-radius:16px; background:var(--play-bg); user-select:none; box-shadow:6px 5px 10px 0px var(--text-color),7px 7px 5px 0px var(--color-light) inset, -7px -7px 5px 0px var(--color-shadow) inset; position:relative;}
@@ -41,6 +41,20 @@
         /* fill(비율유지없음), contain, cover, none(크기조절없음), scale-down(none, contain중 크기 작은값) */
         /* user-select -- auto(default) all(click으로 선택) none text:글자선택가능 */
         
+
+
+        /*  테스트 이후 개선사항  */
+        .play_list li.active{color:#d9a6a6;}
+        .volume{position:relative; text-align:right; margin-top:5px;}
+        .volume>#volume-btn{cursor:pointer;}
+        .volume>#volume-btn.open{color:#ae1100;}
+        .volume>#volume-ctrl{position:absolute; right:0px; bottom:35px; width:30px; height:130px; background:rgba(179, 218, 27, 0.639); border-radius:8px;}
+        .volume>#volume-ctrl.hidden{display:none;}
+        .volume>#volume-ctrl>.volumebg{width:6px; height:90%; border-radius:3px; background:rgba(255,255,255,0.4); position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); overflow:hidden;}
+        .volume>#volume-ctrl>.volumebg>.volumerange{-webkit-appearance:none; transform-origin:center right; transform:rotate(270deg); position:absolute; right:1px; top:-11px; width:121px; cursor:pointer;}
+        .volume>#volume-ctrl>.volumebg>.volumerange:focus{outline:none;}
+        .volume>#volume-ctrl>.volumebg>.volumerange::-webkit-slider-runnable-track{width:100%; height:100%; border-radius:3px;}
+        .volume>#volume-ctrl>.volumebg>.volumerange::-webkit-slider-thumb{-webkit-appearance:none; width:6px; height:6px; border-radius:3px; background:#fff; box-shadow:-100vw 0 0 100vw #f10;}
     </style>
 </head>
 <body>
@@ -52,7 +66,13 @@
             <img src="images/album1.jpg" alt="Alone -- Color Out">
         </div>
         <div class="volume">
-            <span class="volumeBar"></span>
+            <span id="volume-btn" class="material-icons">volume_up</span>
+            <!-- volume_down volume_up volume_off -->
+            <div id="volume-ctrl" class="hidden">
+                <div class="volumebg">
+                    <input type="range" class="volumerange" min="0" max="100" value="50" step="1">
+                </div>
+            </div>
         </div>
         <div class="info">
             <p class="name">Alone</p>
@@ -133,6 +153,7 @@
             }else{
                 musicPause();
             }
+            listClassActive(); /* 테스트 개선 사항 */
         });
         prevBtn.addEventListener('click',()=>{
             prevMusic();
@@ -194,6 +215,7 @@
         
         for(let i=0; i<musicList.length; i++){
             let li=document.createElement('li');
+            li.setAttribute('data-index',i); /*  테스트 개선사항  */
             li.innerHTML=`<strong>${musicList[i].name}</strong> <em>${musicList[i].artist}</em>`;
             fragment.appendChild(li);
         };
@@ -201,7 +223,50 @@
         const listBtn=musicApp.querySelector('#listBtn');
         listBtn.addEventListener('click',()=>{
             listBox.classList.toggle('active');
-        })
+        });
+
+
+        /*  테스트 개선 사항  */
+        const musicListName=listBox.querySelectorAll('li');
+
+        const listClassActive=()=>{
+            musicListName.forEach((list)=>{
+                if(list_index==list.getAttribute('data-index')){
+                    list.classList.add('active');
+                }else{
+                    list.classList.remove('active');
+                }
+            });
+        }
+
+        musicListName.forEach((list)=>{
+            list.addEventListener('click',(e)=>{
+                list_index=e.currentTarget.dataset.index;
+                listClassActive();
+                loadMusic(list_index);
+                musicPlay();
+            })
+        });
+
+        const volumeBtn=musicApp.querySelector('#volume-btn');
+        const volumeCtrl=musicApp.querySelector('#volume-ctrl');
+        const volumeRange=musicApp.querySelector('.volumerange');
+        musicAudio.volume=0.5;
+        volumeBtn.addEventListener('click',(e)=>{
+            e.target.classList.toggle('open');
+            volumeCtrl.classList.toggle('hidden');
+        });
+        volumeRange.addEventListener('change',()=>{
+            musicAudio.volume=volumeRange.value/100;
+            let currentVol=musicAudio.volume;
+            if(currentVol===0){
+                volumeBtn.innerHTML='volume_off';
+            }else if(currentVol<=0.5){
+                volumeBtn.innerHTML='volume_down';
+            }else{
+                volumeBtn.innerHTML='volume_up';
+            }
+        });
     </script>
 </body>
 </html>
